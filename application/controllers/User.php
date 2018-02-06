@@ -40,7 +40,7 @@ class User extends CI_Controller {
         if ($this->form_validation->run() == false) {
             $this->load->view('login', $data);
         } else {
-            if ($this->user_model->resolve_user_login($username, $password)) {
+            if($this->user_model->resolve_user_login($username, $password)) {
 
                 $user_id = $this->user_model->get_user_id_from_username($username);
                 $user = $this->user_model->get_user($user_id);

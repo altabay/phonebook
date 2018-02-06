@@ -84,6 +84,11 @@ class Dashboard extends CI_Controller {
         $data['footer'] = $this->load->view('common/footer', '', true);
 
         if($this->form_validation->run() == false) {
+            $data['record'] = new stdClass();
+            $data['record']->ID = '';
+            $data['record']->name = '';
+            $data['record']->phone = '';
+            $data['record']->note = '';
             $this->load->view('phone_form', $data);
             return;
         }
