@@ -28,14 +28,17 @@ class Phone_model extends CI_Model {
     }
 
     public function get_phone_by_id($id) {
-        return $this->db->get_where('phones', array('id' => $id))->result();
+        return $this->db->get_where('phones', array('id' => $id))->row();
     }
 
     public function delete_phone($id) {
         return $this->db->delete('phones', array('id' => $id));
     }
 
-    public function search_phone($search) {
-        return $this->db->like('name', $search)->or_like('phone', $search)->or_like('date', $search)->or_like('note', $search)->get('phones')->result();
+    public function search_phone($search, $offset=null) {
+        if(is_null($offset))
+            return $this->db->like('name', $search)->or_like('phone', $search)->or_like('date', $search)->or_like('note', $search)->get('phones')->result();
+        else
+            return $this->db->limit(10,$offset)->like('name', $search)->or_like('phone', $search)->or_like('date', $search)->or_like('note', $search)->get('phones')->result();
     }
 }

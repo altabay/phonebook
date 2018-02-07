@@ -59,6 +59,7 @@ class Dashboard extends CI_Controller {
     }
 
     function phone_form($record_id=null) {
+
         $data['record'] = new stdClass();
         $data['record']->ID = '';
         $data['record']->name = '';
@@ -66,12 +67,22 @@ class Dashboard extends CI_Controller {
         $data['record']->note = '';
 
         if(!is_null($record_id)) {
-            $data['record'] = $this->phone_model->get_phone_by_id($record_id)[0];
+            if(!is_null($this->phone_model->get_phone_by_id($record_id)))
+                $data['record'] =  $this->phone_model->get_phone_by_id($record_id);
         }
         $this->load->helper('form');
 
         $data['header'] = $this->load->view('common/header', '', true);
         $data['footer'] = $this->load->view('common/footer', '', true);
+
+        if ($this->session->flashdata('name-failed') !== null) {
+            $data['errors']['name'] = $this->session->flashdata('name-failed');
+        }
+
+        if ( $this->session->flashdata('phone-failed') !== null) {
+            $data['errors']['phone'] = $this->session->flashdata('phone-failed');
+        }
+
         $this->load->view('phone_form', $data);
     }
 
@@ -84,12 +95,14 @@ class Dashboard extends CI_Controller {
         $data['footer'] = $this->load->view('common/footer', '', true);
 
         if($this->form_validation->run() == false) {
-            $data['record'] = new stdClass();
-            $data['record']->ID = '';
-            $data['record']->name = '';
-            $data['record']->phone = '';
-            $data['record']->note = '';
-            $this->load->view('phone_form', $data);
+            if (form_error('name')) {
+                $this->session->set_flashdata('name-failed','Name is required');
+            }
+            if (form_error('phone')) {
+                $this->session->set_flashdata('phone-failed','Phone is required');
+            }
+
+            redirect(base_url().'dashboard/phone_form/'.$_POST['ID']);
             return;
         }
 
@@ -113,11 +126,40 @@ class Dashboard extends CI_Controller {
             redirect(base_url());
     }
 
-    function search() {
+    function search($offset=0) {
+        $this->load->library('pagination');
         $this->load->helper('form');
         $search = htmlspecialchars($this->input->post('search', true));
-        $data['phones'] = $this->phone_model->search_phone($search);
-        $data['pages'] = '';
+        $data['phones'] = $this->phone_model->search_phone($search, $offset);
+
+        $config['base_url'] = base_url().'dashboard/search';
+        $config['total_rows'] = count($this->phone_model->search_phone($search));
+        $config['per_page'] = 10;
+        $config['full_tag_open'] = '<ul class="pagination">';
+        $config['full_tag_close'] = '</ul>';
+
+        $config['cur_tag_open'] = '<li class="page-link active">';
+        $config['cur_tag_close'] = '</li>';
+
+        $config['num_tag_open'] = '<li class="page-item">';
+        $config['num_tag_close'] = '</li>';
+
+        $config['first_tag_open'] = '<li class="page-item">';
+        $config['first_tag_close'] = '</li>';
+
+        $config['last_tag_open'] = '<li class="page-item">';
+        $config['last_tag_close'] = '</li>';
+
+        $config['next_tag_open'] = '<li class="page-item">';
+        $config['next_tag_close'] = '</li>';
+
+        $config['prev_tag_open'] = '<li class="page-item">';
+        $config['prev_tag_close'] = '</li>';
+
+        $config['attributes'] = array('class' => 'page-link');
+
+        $this->pagination->initialize($config);
+        $data['pages'] = $this->pagination->create_links();
 
         $data['header'] = $this->load->view('common/header', '', true);
         $data['footer'] = $this->load->view('common/footer', '', true);
